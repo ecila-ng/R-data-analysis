@@ -1,0 +1,162 @@
+---
+title: "Project 3 - Analysis of Plant Heights"
+author: "Tran Nguyen"
+output:
+  html_document: default
+  html_notebook:
+    theme: flatly
+---
+
+## Description of Project
+
+The purpose of this project is to analyze the effects that various factors have on the growth of a certain type of plant. In particular, a company would like to know if a new chemical they have developed increases the effect that exposure to sunlight has on the growth of the plant.  
+
+Assume that 400 individual plants were studied. Each plant can be classified as being a member of one of three different species. Some of the plants were given a specific treatment. Some of the plants were treated with the chemical, and some were not. Researchers measured the hours of sunlight that each plant received per day. The height of the plant was measured 60 days after it was planted. 
+
+The data set provided contains information about each of the 400 plants. The following features are recorded for each of the observations:
+
+<center>
+Variable | Description
+-----|----------------------------------------------
+**`Ht`** | The height of the plant in cm 60 days after it was planted. 
+**`Sun`** | The average number of hours of sunlight received per day. 
+**`Tr`** | A binary variable that indicates whether the plant received the treatment (1) or not (0). 
+**`Sp`** | The species of the plant. The species is coded as A, B, or C.
+</center>
+
+Our goal in this project will be to create a multiple linear regression model that attempts to predict `Ht` as a function of the remaining variables. 
+
+
+## Part A: Loading and Exploring the Data
+
+Begin by loading the `ggplot2` package. 
+
+```{r}
+require(ggplot2)
+```
+
+Load the data contained in the text file into a data frame.
+
+```{r}
+df <- read.table("plants.txt", sep = "\t", header = TRUE)
+```
+
+Create a summary of the data frame. 
+
+```{r}
+summary(df)
+```
+
+If there are any qualitative variables that are being interpreted numerically, convert them into factors and create a new summary of the data frame. 
+
+```{r}
+df$Tr <- factor(df$Tr)
+summary(df)
+```
+
+Use `ggplot` to create a scatter plot of `Ht` against `Sun`. Color the points in the scatter plot based on whether or not the plant received the treatment. Set the size of the points to 3, and the alpha level to 0.6. 
+
+```{r}
+ggplot(df, aes(Sun, Ht, col = Tr)) + geom_point(alpha = 0.6, size =3 )
+```
+
+With the same number of hours of sunlight received, plants which received the treatment tend to grow taller than plants that did not. 
+
+Add a `facet_grid()` layer to your previous `ggplot` command, faceting on ` Sp` and `Tr`. The resulting output should be six scatter plots, arranged into 3 rows and 2 columns. 
+
+```{r}
+ggplot(df, aes(Sun, Ht, col = Tr)) + geom_point(alpha = 0.6, size =3) + facet_grid(Sp ~ Tr)
+```
+
+**The treatment has the greatest impact on plants C. With the same number of sunlight hours, plants C that received the treatment appear to grow taller compared to the plants C that did not. The treatment has little impact on plants B and nearly no effect on plants A. **
+
+
+## Part B: Generate Models
+
+Create several regression models with `Ht` as the response variable. Consider each of the following sets of predictors:
+
+1. `Sun` only. 
+2. `Sun`, `Tr`, and `Sp`.
+3. `Sun`, `Tr`, `Sp`, `Sun:Tr`, and `Sun:Sp`.
+4. Consider at least one model whose predictors are a subset of those in Model 3. Consider as many as necessary to be convinced that you have the best possible model.  
+
+Display a summary of each model. After each summary, provide a brief evaluation of the model. Display your comments in bold. 
+```{r}
+m1 <- lm(Ht ~ Sun, df) 
+summary(m1)
+```
+**Model 1 has a highly significant t-test result, implies a strong impact on the height of the plant. Adjusted R-squared of 0.3115 suggests that 31.15% variances in Height are explained by the model.**
+```{r}
+m2 <- lm(Ht ~ Sun + Tr + Sp, df) 
+summary(m2)
+```
+**Model 2 has highly significant t-test results, suggests a strong impact on the height of the plant. Model 2 has higher adjusted R-squared than model 1, which means there has been an improvement in the model. It also suggests that 68.2% variances in Height are explained by the model.**
+
+```{r}
+m3 <- lm(Ht ~ Sun + Tr + Sp + Sun:Tr + Sun:Sp, df) 
+summary(m3)
+```
+**Model 3 has highly significant t-test results, suggests there is a atrong impact on the height of the plant. Model 3 has higher adjusted R-squared than model 2, which means there has been an improvement in the model. It also suggests that 71.96% variances in Height are explained by the model.**
+```{r}
+m4 <- lm(Ht ~ Sun + Tr + Sp + Sun:Tr , df) 
+summary(m4)
+```
+**Model 4 also has significant t-test results, however the adjusted R-squared has decreased, which means a predictor improves the model by less than expected. This model suggests that 71.16% variances in Height are explained.**
+```{r}
+m5 <- lm(Ht ~ Sun + Tr + Sp + Sun:Sp , df) 
+summary(m5)
+```
+**Model 5 also has significant t-test results, however the adjusted R-squared has decreased, which means a predictor improves the model by less than expected. This model suggests that 68.92% variances in Height are explained.**
+
+## Part C: Final Model
+
+Model 3 would be the best model out of 5. It has the highest adjusted R-squared, which suggests an improvemment in the model. Most individuals of model 3 has a highly significant t-test result, means they have a strong impact on the height of the plant. From the p-value we can reject the null hypothesis. 71.96% variances in Height are explained by the model
+
+
+$\hat{Ht} = 19.8170 + 0.9964 \cdot Sun + 0.7028 \cdot Tr_1 - 6.9521\cdot Sp_B - 4.3546 \cdot Sp_C + 1.1091 \cdot Sun \cdot Tr_1 + 0.1474 \cdot Sun \cdot Sp_B + 0.6863 \cdot Sun \cdot Sp_C$
+
+The treatment has the greatest impact on plants C. With the same number of sunlight hours, plants C that received the treatment appear to grow taller compared to the plants C that did not. The treatment has little impact on plants B and nearly no effect on plants A. It appears that the treatment does increase the benefits that the plant receives from exposure to sunlight. For any given hour of sunlight, plants which received treatment grow 1.1091 cm taller than those without treatment. 
+
+## Part D: Residual Analysis
+
+Create a residual plot for your final model. 
+
+```{r}
+res <- m3$residuals
+fitted <- m3$fitted.values
+plot(res ~ fitted, pch=19, col=rgb(0.1, 0.2, 1.0, 0.6),
+     main="Residual Plot", xlab="Fitted", ylab="Residual") ; abline(h = 0, col = "red")
+```
+
+**The residual plot has a quite symmetrical distribution. This is a good plot suggesting an evidence of equal variance. There is no trend and it does not suffer from heteroskedasticity.**
+
+Create a histogram of the residuals in your final model, using 20 breaks.
+
+```{r}
+hist(m3$residuals, breaks=20, col = "salmon", main = "Histogram of Residuals", xlab = "Residuals")
+```
+
+**The residuals of the fitted model has a normal distribution. The histogram provides strong evidence that our residuals are normally distributed.**
+
+Create a qq-plot of the residuals in your final model. 
+
+```{r}
+qqnorm(m3$residuals)
+qqline(m3$residuals)
+```
+
+**The qqplot strongly suggests that the distribution of residuals is approximately normal. There is some indication that the distribution might be slightly light-tailed.**
+
+
+## Part E: Making Predictions
+
+Use your model to create a 95% prediction interval for the height of two plants. Assume that both received an average of 5 hours of sunlight a day, and both are members of Species C. However one received the treatment while the other did not. 
+```{r}
+predict(m3, newdata = data.frame(Sun = 5, Sp = "C", Tr = c("0", "1")), interval = "response")
+```
+
+
+
+
+
+
