@@ -1,0 +1,186 @@
+---
+title: "Porject 1 - Analysis of Iris Dataset"
+author: Tran Nguyen
+output: 
+  html_notebook:
+    theme: flatly
+---
+
+## Description of Project
+
+For this project, you will be working with the iris dataset. This dataset contains 150 observations, each of which represents a single flower, which is of one of three iris species: setosa, versicolor, or virginica. The dataset has five columns:
+
+<center>
+Variable | Description
+-----|----------------------------------------------
+**`Species`** | The species of the flower. 
+**`Petal.Length`** | The length of the petal, measured in cm.  
+**`Petal.Width`** | The width of the petal, measured in cm. 
+**`Sepal.Length`** | The length of the sepal, measured in cm. 
+**`Sepal.Width`** | The width of the sepal, measured in cm. 
+</center>
+
+Our goal in this project will be to create a linear model that attempts to predict the sepal length based on one of the other three measurements. 
+
+
+## **Part A: Loading and Exploring the Data**
+
+The following line of R code loads the data into a data frame called `iris`. 
+
+```{r}
+data(iris)
+```
+
+Create a summary of the `iris` data frame. 
+
+```{r}
+summary(iris)
+```
+
+
+## **Part B: Graphical Analysis**
+
+Create a scatter plot that plots sepal length against sepal width. 
+
+```{r}
+plot(iris$Sepal.Length ~ iris$Sepal.Width, pch=19, col=rgb(0.1, 0.2, 1.0, 0.6), main = "Sepal Length against Sepal Width", xlab="Sepal Width", ylab="Sepal Length")
+```
+
+
+Create a scatter plot that plots sepal length against petal length. 
+
+```{r}
+plot(iris$Sepal.Length ~ iris$Petal.Length, pch=19, col=rgb(0.1, 0.2, 1.0, 0.6), main = "Sepal Length against Pepal Length", xlab="Petal Length", ylab="Sepal Length")
+```
+
+
+Create a scatter plot that plots sepal length against petal width. 
+
+```{r}
+plot(iris$Sepal.Length ~ iris$Petal.Width, pch=19, col=rgb(0.1, 0.2, 1.0, 0.6), main = "Sepal Length against Pepal Width", xlab="Petal Width", ylab="Sepal Length")
+```
+
+While the plots of sepal length against sepal width and sepal length against petal width seem to have very little relationship, the plot of plots sepal length against petal length have a quite good relationship. Despite some outliers in the left which might be caused by different species, as sepal length increases, petal length also increases.
+
+## **Part C: Create the Linear Models**
+
+We will now generate three regression models. Each model will have sepal length as the response variable, and will have one of the other three measurements as the predictor. 
+
+####**Sepal Length versus Sepal Width**
+
+Use the `lm()` function to create a least-squares model by regressing sepal length against sepal width. Store the model in a variable called `mod1`. Generate a summary of `mod1`. 
+
+```{r}
+mod1 <- lm(Sepal.Length ~ Sepal.Width, iris)
+summary(mod1)
+```
+
+The fitted model is given by the following equation: 
+
+$\hat {Sepal.Length} = 6.5262 - 0.2234 \cdot Sepal.Width$
+
+
+\
+
+The models tells us that for each additional centimeters in the sepal width, the sepal length decreases by roughly 0.2234 centimeters, on average.
+
+The r-squared value is given by `r^2 = 0.01382`, which tells us that roughly 1.382% of the variance in the sepal length is explained by the regression model. A significant portion of the sepal length remains unexplained, but this model certainly has predictive value. The residual standard error is equal to 0.8251.
+
+####**Sepal Length versus Petal Length**
+
+Use the `lm()` function to create a least-squares model by regressing sepal length against petal length. Store the model in a variable called `mod2`. Generate a summary of `mod2`. 
+
+```{r}
+mod2 <- lm(iris$Sepal.Length ~ iris$Petal.Length)
+summary(mod2)
+```
+
+The fitted model is given by the following equation: 
+
+$\hat {Sepal.Length} = 4.3066 + 0.4089 \cdot Petal.Length$
+
+
+\
+
+The models tells us that for each additional centimeters in the petal length, the sepal length increases by roughly 0.4089 centimeters, on average.
+
+The r-squared value is given by `r^2 = 0.76`, which tells us that roughly 76% of the variance in the sepal length is explained by the regression model. This model has quite high predictive value. The residual standard error is equal to 0.4071. 
+
+
+####**Sepal Length versus Petal Width**
+
+Use the `lm()` function to create a least-squares model by regressing sepal length against petal width. Store the model in a variable called `mod3`. Generate a summary of `mod3`. 
+
+```{r}
+mod3 <- lm(iris$Sepal.Length ~ iris$Petal.Width)
+summary(mod3)
+```
+The fitted model is given by the following equation: 
+
+$\hat {Sepal.Length} = 4.7776 + 0.8885 \cdot Petal.Width$
+
+
+\
+
+The models tells us that for each additional centimeters in the petal width, the sepal length increases by roughly 0.8885 centimeters, on average.
+
+The r-squared value is given by `r^2 = 0.669`, which tells us that roughly 66.9% of the variance in the sepal length is explained by the regression model. Nearly 30% of the sepal length remains unexplained, still, this model has a quite good predictive value. The residual standard error is equal to 0.478.
+
+####**Model Selection**
+
+The model of sepal length against petal length would provide the best fit because it has the highest r-squared value of 0.76, implies that a large portion of the sepal length is explained and can be predicted. 
+
+
+## **Part D: Residual Analysis**
+
+We will now perform an analysis of the residuals in the model you selected above. Begin by creating a residual plot for that model. Add a red, horizontal line to your plot at $y=0$. 
+
+```{r}
+plot(mod2$residuals ~ iris$Petal.Length, 
+     pch=19, col=rgb(0.1, 0.2, 1.0, 0.6),
+     main="Residual Plot", xlab="Petal Length", ylab="Residuals")
+abline(h=0, col="red", lwd=2)
+```
+
+This residual plot looks good. There seems to be a slightly trend in the residuals. The variance in the residuals appears to be roughly equal across the range of petal length.
+
+
+We will now attempt to assess the normality of the residuals. Create a histogram of the residuals in your selected model. Set the histogram to have 20 breaks. 
+
+```{r}
+hist(mod2$residuals, breaks=20, col="salmon", 
+     main="Histogram of Residuals", xlab="Residuals") 
+```
+
+The histogram provides strong evidence that our residuals are quite normally distributed with a mean of 0, except for that odd value in the far left.
+
+Finally, we create a qqplot plot of the residuals. 
+
+```{r}
+qqnorm(mod2$residuals)
+qqline(mod2$residuals)
+```
+
+The qqplot strongly suggests that the distribution of residuals is approximately normal. There is some indication that the distribution might be slightly heavy-tailed.
+
+## **Part E: Predictions**
+
+Use your model to create predictions for the sepal widths of iris flowers with the following measurements:
+
+1. Sepal.Width = 3.7,  Petal.Length = 1.5, Petal.Width = 0.4
+2. Sepal.Width = 3.0,  Petal.Length = 4.2, Petal.Width = 1.2
+3. Sepal.Width = 2.7,  Petal.Length = 5.6, Petal.Width = 1.3
+
+With each prediction, provide a 95% prediction interval for the sepal width. 
+
+```{r}
+predict(mod1, newdata = data.frame(Sepal.Width = 3.7, Petal.Length = 1.5, Petal.Width = 0.4), interval = "predict", level = 0.95)
+
+predict(mod1, newdata = data.frame(Sepal.Width = 3.0, Petal.Length = 4.2, Petal.Width = 1.2), interval = "predict", level = 0.95)
+
+predict(mod1, newdata = data.frame(Sepal.Width = 2.7, Petal.Length = 5.6, Petal.Width = 1.3), interval = "predict", level = 0.95)
+
+```
+
+
+
