@@ -1,0 +1,145 @@
+---
+title: "Project 2 - Analysis of Sales Data"
+author: Tran Nguyen
+output: 
+  html_notebook:
+    theme: flatly
+---
+
+## Description of Project
+
+Assume that a company called Global Markets Inc. operates 127 grocery stores across the country. They collect data relating to annual sales for each of their stores. The data is stored in the data file "global.txt". A description of the fields in this dataset is as follows: 
+
+
+<center>
+Variable | Description
+-----|----------------------------------------------
+**`Sales`** | Annual sales, in $1000's. 
+**`SqFt`** | Size of store, measured in 1000's of square feet.  
+**`Inv`** | Value of inventory, in $1000's. 
+**`Adv`** | Annual advertising budget, in $1000's. 
+**`Pop`** | Population served by store, in 1000's of people. 
+**`MedInc`** | Median income of population, in $1000's. 
+</center>
+
+Our goal in this project will be to create a multiple linear regression model that attempts to predict `Sales` as a function of some combination of the remaining five variables. 
+
+
+## Part A: Loading and Exploring the Data
+
+Load the data contained in the text file into a data frame.
+
+```{r}
+df <- read.table("global.txt", sep = "\t", header = TRUE)
+```
+
+Create a summary of the data frame. 
+
+```{r}
+sum(df)
+```
+
+Use `pairs()` to create a pairs plot showing scatterplots of all pairs of variables in the data frame. 
+
+```{r}
+pairs(df)
+```
+
+Use `cor()` to create a correlation matrix showing the correlations of all pairs of variables in the data frame. 
+
+```{r}
+cor(df)
+```
+
+`Pop` appears to have the strongest linear relationship with `Sales`.
+
+
+## Part B: Consider the Full Model 
+
+Create a model by regressing `Sales` against all of the other five variables at once. Then display a summary of this model.
+
+```{r}
+m1 <- lm(Sales ~ SqFt + Inv + Adv + Pop + MedInc, df) 
+summary(m1)
+```
+
+This model seems good. The p-value of 5.938e-14 indicates that we should reject the null hypothesis that other five variables have no impact on Sales. The resuls also show that Pop is highly significant controlling (with p-value of 8.91e-14). The fitted model is given by: $\hat {Sales} = -0.45585 + 9.83422 \cdot SqFt + 0.07853 \cdot Inv + 6.02217 \cdot Adv + 7.01995 \cdot Pop - 0.20129 \cdot MedInc $. For any given inventory value, advertising budget, population and median income of population, improving in a size of store will lead to an extra $9834 in sales. Similarly, for any given size of store, inventory value, advertising budget and population, an additional median income of population will lead to a decrease of $201 in sales.
+
+The r-squared value is given by `r^2 = 0.4407`, which tells us that nearly 44.07% of the variances are explained by the model. The residual standard error is equal to 54.53, means the percentage error is 45%.
+
+## Part C: Model Selection
+
+Based on your analysis up to this point, select one of the five potential predictors and create a simple linear regression model using only this one predictor. Create a summary of the model. 
+
+```{r}
+m2 <- lm(Sales ~ Pop, df)
+summary(m2)
+```
+The fitted model is given by the following equation:
+$\hat {Sales} = 116.5682 + 7.2474 \cdot Pop $
+
+The model tells us that for each 1000 people, the annual sales increase by $116,568 on average. The t-test and p-value indicate that we can conclude there is a strong relationship between the population served by store and its annual sales. The r-squared value is given by `r^2 = 0.3668`, which tells us that roughly 36.68% of the variance is explained by the model. The residual standard error is equal to 57.08, so we can say that the percentage error is 45.66%.
+
+Now add variables into the model one at a time, creating a summary and providing an evaluation of the model at each step. If a variable that you have added fails to improve the model, then remove it and add another variable. Explain your decisions at each step. 
+
+Continue this process until you have a satisfactory model. All of the coefficients in your final model should pass their t-tests with at the 5% level of significance. 
+
+```{r}
+m3 <- lm(Sales ~ Pop + SqFt, df)
+summary(m3)
+```
+The p-value of 2.292e-14 concludes we have a relationship between Sales, Pop and SqFt. The r-squared value is given by `r^2 = 0.3974`, which tells us that nearly 39.74% of the variances are explained by the model. The residual standard error is equal to 55.91, means the percentage error is 45%.
+
+
+```{r}
+m4 <- lm(Sales ~ Pop + Adv , df)
+summary(m4)
+```
+The p-value is  3.661e-14. The r-squared value is given by `r^2 = 0.415`, which tells us that nearly 41.5% of the variances are explained by the model. The residual standard error is equal to 55.09, means the percentage error is 44.42%.
+
+
+## Part D: Final Model
+
+Provide the equation for your final model by editing the formula below. 
+
+$\hat {Sales} = -0.45585 + 9.83422 \cdot SqFt + 0.07853 \cdot Inv + 6.02217 \cdot Adv + 7.01995 \cdot Pop - 0.20129 \cdot MedInc $
+
+## Part E: Residual Analysis
+
+Create a residual plot for your final model. 
+
+```{r}
+res <- m1$residuals
+fitted <- m1$fitted.values
+
+plot(res ~ Pop, df, pch=19, col=rgb(0.1, 0.2, 1.0, 0.6),
+     main="Residual Plot", xlab="Population served by store", ylab="Residual") ; abline(h = 0, col = "red")
+
+plot(res ~ fitted, pch=19, col=rgb(0.1, 0.2, 1.0, 0.6),
+     main="Residual Plot", xlab="Fitted", ylab="Residual") ; abline(h = 0, col = "red")
+```
+We can see that the distribution of the residuals is quite symmetrical. This is a good plot suggesting an evidence of equal variance.
+
+Create a histogram of the residuals in your final model, using 20 breaks.
+
+```{r}
+hist(m1$residuals, breaks=20, col = "salmon", main = "Histogram of Residuals", xlab = "Residuals")
+```
+
+The residuals of the fitted model has a normal distribution. The histogram provides strong evidence that our residuals are normally distributed with a mean of 0.
+
+Create a qq-plot of the residuals in your final model. 
+
+```{r}
+qqnorm(m1$residuals)
+qqline(m1$residuals)
+```
+
+The qqplot strongly suggests that the distribution of residuals is approximately normal. There is some indication that the distribution might be slightly light-tailed.
+
+
+
+
+
+
+
