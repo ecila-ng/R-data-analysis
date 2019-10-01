@@ -1,0 +1,127 @@
+---
+title: "Cars Data Set"
+output: html_notebook
+author: Tran Nguyen
+---
+The data set for this project contains data of 398 models of cars manufactured in the 70s and early 80s. For each model, me have the following features:
+
+* **mpg** - Fuel efficiency in miles per gallon.
+* **cyl** - Number of cylinders in the engine.
+* **wT** - Weight of the vehicle in pounds.
+* **region**  - Region where the vehicle was manufactured. (1 = USA, 2 = Europe, 3 = Asia)
+* **model** - Name of the vehicle model.
+
+## Load, Analyze, and Prepare the Data
+
+We begin by loading the data used for this project attaching the necessary packages.
+```{r}
+require(ggplot2)
+require(gridExtra)
+auto <- read.table("auto_mpg.txt", sep = "\t", header = TRUE)
+```
+We will now look at a summary of our data frame.
+```{r}
+summary(auto)
+```
+The variables cyl and region are being considered as numerical variables, although they are categorical in nature. Additionally, the codes assiged to the regions are not very descriptive.
+
+We will substitute out the regoing codes with the following classifications:
+
+* We replace 1 with "USA".
+* We replace 2 with "EUR".
+* We replace 3 with "ASIA".
+
+We then convert both cyl and region into factors.
+```{r}
+auto$cyl <- factor(auto$cyl)
+
+regionLookUp <- c("USA", "EUR", "ASIA")
+auto$region <- factor(regionLookUp[auto$region])
+summary(auto)
+```
+
+## Mean Miles per Gallon by Cylinder and Region
+
+We will now begin exploring how the number of cylinders and the manufacturing region affect the number of miles per gallon attained by a car.
+
+We first calculate the mean mpg for cars, broken out by the number of cylinders in the car.
+```{r}
+sapply(split(auto$mpg, auto$cyl), mean) 
+```
+From the above table, we see that cars with 4 cylinders is the most fuel efficient, while 8-cylinder affects the miles per gallon attained by a car.
+
+Next, we calculate the mean mpg for cars, broken out by the region they are from.
+
+```{r}
+sort(sapply(split(auto$mpg, auto$region), mean))
+```
+We also see that cars made by Asian manufacturer tend to be the most fuel efficient, while USA cars have least miles per gallon.  
+
+## Histograms
+
+We will begin our analysis by creating histograms of Mpg and Cylinders and Mpg and Regions.
+
+```{r}
+h1 <- ggplot(auto, aes(x = mpg, fill = cyl)) + geom_histogram(bins = 25)
+h2 <- ggplot(auto, aes(x = mpg, fill = region)) + geom_histogram(bins = 25)
+grid.arrange(h1,h2, ncol = 2)
+```
+From the histograms above, we notice that cars with 4 cylinders from Asia and Europe are the most fuel efficient. We also notice that most 8-cylinder cars come from the USA. However, to give the most accurate conclusion, we need to take a more overall look.
+
+Now let's count the number of cars with different number of cylinders and different origins we have in our dataset. 
+
+```{r}
+h1 <- ggplot(auto, aes(x = cyl, fill = cyl)) + geom_bar()
+h2 <- ggplot(auto, aes(x = region, fill = region)) + geom_bar()
+grid.arrange(h1,h2, ncol = 2)
+```
+The number of cars with 4 cylinders is significantly greater cars with other number of cylinders, and the number of cars from USA manufacturer is also greater than cars from Europe and Asia.
+
+Now we will take a look at the relationship between the number of cylinders in a car and its origin.
+
+```{r}
+h1 <- ggplot(auto, aes(x = cyl, fill = region)) + geom_bar(position = position_fill())
+h2 <- ggplot(auto, aes(x = region, fill = cyl)) + geom_bar(position = position_fill())
+grid.arrange(h1,h2, ncol = 2)
+```
+
+We notice that all 5-cylinder cars are from Europe, all 3-cylinder cars are from Asia and all 8-cylinder cars are from the USA. 1/3 of 4-cylinder cars are from the USA, Europe and Asia, equally. For 6-cylinder cars, most of them are from the USA. As for region, Asian and European cars are mostly 4-cylinders, while USA cars tend to have 8 cylinders. 
+
+Let's take a look at the box plot for mpg by cyl and mpg by region to have another oveall look.
+
+```{r}
+h1 <- ggplot(auto, aes(x = cyl, y = mpg, fill = cyl)) + geom_boxplot()
+h2 <- ggplot(auto, aes(x = region, y = mpg, fill = region)) + geom_boxplot()
+grid.arrange(h1,h2, ncol = 2)
+```
+Since the box plot for 3, 6 and 8-cylinder cars are comparatively short, they suggest that cars have either 3, 6 and 8 cylinders tend to be least fuel efficient. Same for the region box plot, USA cars have the smallest mean of number of miles per gallon.
+
+Next, we're gonna take a look at the box plots for each number of cylinders in a car against its origin.
+
+```{r}
+h1 <- ggplot(auto, aes(x = region, y = mpg, fill = region)) + geom_boxplot()+ facet_wrap(~ cyl)
+h1
+```
+We can see a clear relationship between how the number of cylinders in a car and its origin affect its mpg here. Cars with 4 cylinders have the highest median among others. 
+
+Let's see if the car's weight has any thing to do with mpg and its number of cylinders as well as origin.
+```{r}
+h1 <- ggplot(auto, aes(x = wt, y = mpg, color = cyl)) + geom_jitter()
+h2 <- ggplot(auto, aes(x = wt, y = mpg, color = region)) + geom_jitter()
+grid.arrange(h1,h2, ncol = 2)
+```
+The graph on the left suggests that the more cylinders the car has, the more heavy it weighs, and the least fuel effciency that car has. The graph on the right also suggests that cars from USA tend to weigh more than cars from Asia and Europe, which mean they have more cylinders, and also mean they are less fuel efficient.
+
+Let's look at the details! Here's a graph show the weight against mpg filtering by its origin.
+```{r}
+h1 <- ggplot(auto, aes(x = wt, y = mpg, color = region)) + geom_jitter() + facet_wrap(~ region)
+h1
+```
+Cars from Asia and Europe are clearly not as heavy as cars from the USA, which give them more miles per gallon. 
+
+Finally, a general graph of all the features we have been looking at: mpg, cylinders, weight and region. 
+```{r}
+h1 <- ggplot(auto, aes(x = wt, y = mpg, color = cyl)) + geom_jitter() + facet_grid(cyl ~ region)
+h1
+```
+Asian cars with 4-cylinders are the most fuel efficient while USA cars with 8-cylinders are the least fuel efficient. The number of cylinders a car have and the manufacturing region affect the number of miles per gallon attained by a car. They also affect the car's weight, which is another factor that change how the car's fuel efficiency.
